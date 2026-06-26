@@ -1,1 +1,1 @@
-web: gunicorn myHospital.wsgi
+web: python manage.py migrate && python seed_users.py && gunicorn myHospital.wsgi --bind 0.0.0.0:$PORT
