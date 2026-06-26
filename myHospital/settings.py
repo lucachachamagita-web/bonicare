@@ -14,6 +14,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://bonicare-clinic.up.railway.app',
     'https://*.up.railway.app',
 ]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
