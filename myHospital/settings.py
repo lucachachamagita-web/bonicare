@@ -3,12 +3,13 @@ Django settings for myHospital project.
 """
 
 import os
+import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = 'o!3$!vwqgdmd9+1#b^b((br!n$$rx5nhj7=n_=zaf1h7wx7#li'
-DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+SECRET_KEY = os.environ.get('SECRET_KEY', 'o!3$!vwqgdmd9+1#b^b((br!n$$rx5nhj7=n_=zaf1h7wx7#li')
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ['true', '1']
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -29,6 +30,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,14 +61,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myHospital.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'myhospital',
-        'USER': 'postgres',
-        'PASSWORD': '32578737Sm.',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default='postgresql://postgres:32578737Sm.@localhost:5432/myhospital',
+        conn_max_age=600,
+        ssl_require=False
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -91,6 +90,9 @@ USE_L10N = True
 USE_TZ = False
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 LOGIN_URL = '/login/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -53,6 +53,11 @@ def staff_create(request):
         phone = request.POST.get('phone')
         basic_salary = request.POST.get('basic_salary', '0.00')
         
+        from django.contrib import messages
+        if User.objects.filter(username=username).exists():
+            messages.error(request, f"Username '{username}' already exists. Please choose a different one.")
+            return render(request, 'profiles/staff_form.html')
+            
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -60,12 +65,18 @@ def staff_create(request):
             first_name=first_name,
             last_name=last_name
         )
+        if role == 'PROPRIETOR':
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            
         UserProfile.objects.create(
             user=user,
             role=role,
             phone=phone,
             basic_salary=basic_salary
         )
+        messages.success(request, f"Staff member '{username}' registered successfully.")
         return redirect('staff_list')
     return render(request, 'profiles/staff_form.html')
 

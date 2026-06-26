@@ -16,12 +16,12 @@ def create_user(username, password, email, role):
         print(f"User {username} already exists.")
 
 print("Seeding default users...")
-create_user('admin_proprietor', 'testpass123', 'admin@clinic.com', 'PROPRIETOR')
+create_user('wekesa', 'Wekesa@123', 'admin@clinic.com', 'PROPRIETOR')
 create_user('test_doctor', 'testpass123', 'doc@clinic.com', 'DOCTOR')
 create_user('test_attendant', 'testpass123', 'attendant@clinic.com', 'ATTENDANT')
 
 # Make the proprietor a superuser too for admin access
-admin_user = User.objects.get(username='admin_proprietor')
+admin_user = User.objects.get(username='wekesa')
 admin_user.is_superuser = True
 admin_user.is_staff = True
 admin_user.save()
