@@ -1,0 +1,46 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Staff Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 20px;">
+        <div class="col s6">
+            <h4>Clinic Staff</h4>
+        </div>
+        <div class="col s6 right-align">
+            <a href="{% url 'staff_create' %}" class="btn blue-grey darken-2">Register New Staff</a>
+        </div>
+    </div>
+    
+    <table class="striped responsive-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in staff %}
+            <tr>
+                <td>{{ p.user.first_name }} {{ p.user.last_name }}</td>
+                <td>{{ p.user.username }}</td>
+                <td><span class="chip">{{ p.role }}</span></td>
+                <td>{{ p.phone }}</td>
+                <td>{{ p.user.email }}</td>
+                <td>
+                    <a href="{% url 'staff_edit' p.id %}" class="btn-small blue-grey darken-1">Edit</a>
+                    <a href="{% url 'staff_delete' p.id %}" class="btn-small red darken-2">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6">No staff profiles found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

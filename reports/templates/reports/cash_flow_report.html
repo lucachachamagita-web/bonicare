@@ -1,0 +1,219 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row hide-on-print" style="margin-top: 20px;">
+        <div class="col s12 right-align">
+            <button onclick="window.print()" class="btn blue"><i class="material-icons left">print</i>Print / Export PDF</button>
+        </div>
+    </div>
+    
+    <div class="report-header center-align" style="margin-bottom: 30px;">
+        <h4 style="font-weight: bold; margin-bottom: 5px;">BONICARE HEALTH CLINIC</h4>
+        <p class="grey-text" style="margin-top: 0; margin-bottom: 10px;">Contact: 0758269991</p>
+        <h5 style="margin-top: 10px;">Cash Flow Report</h5>
+        <p style="margin: 0;">Period: {{ month }} to Date</p>
+    </div>
+
+    <!-- SUMMARY SECTION -->
+    <div class="row">
+        <div class="col s12 m4">
+            <div class="card green lighten-4">
+                <div class="card-content">
+                    <span class="card-title">Total Revenue</span>
+                    <h5>Ksh {{ total_revenue|floatformat:2 }}</h5>
+                    <p style="font-size: 0.9em">
+                        Services/Visits: Ksh {{ total_revenue_bills|floatformat:2 }}<br>
+                        OTC Sales: Ksh {{ total_revenue_otc|floatformat:2 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col s12 m4">
+            <div class="card red lighten-4">
+                <div class="card-content">
+                    <span class="card-title">Total Expenses</span>
+                    <h5>Ksh {{ total_expenses|floatformat:2 }}</h5>
+                    <p style="font-size: 0.9em">
+                        Stock/Purchases: Ksh {{ total_stock_expense|floatformat:2 }}<br>
+                        Salaries: Ksh {{ total_salary_expense|floatformat:2 }}<br>
+                        Other: Ksh {{ total_expenses_explicit|floatformat:2 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col s12 m4">
+            <div class="card blue lighten-4">
+                <div class="card-content">
+                    <span class="card-title">Net Profit</span>
+                    <h5>Ksh {{ net_profit|floatformat:2 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <h5 class="center-align" style="margin-top: 30px;">INCOME BREAKDOWN</h5>
+
+    <div class="row">
+        <div class="col s12 m6">
+            <h6>Income from Services & Consultations (Paid Visits)</h6>
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Service</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in service_breakdown %}
+                    <tr>
+                        <td>{{ item.date|date:"M d, Y" }}</td>
+                        <td>{{ item.patient }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>Ksh {{ item.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">No services recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col s12 m6">
+            <h6>Income from Pharmacy & Medicines (Paid Visits)</h6>
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Medicine</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in prescription_breakdown %}
+                    <tr>
+                        <td>{{ item.date|date:"M d, Y" }}</td>
+                        <td>{{ item.patient }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>Ksh {{ item.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">No prescriptions recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col s12">
+            <h6>Income from Over-The-Counter (OTC) Sales</h6>
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in otc_sales %}
+                    <tr>
+                        <td>{{ sale.timestamp|date:"M d, Y" }}</td>
+                        <td>{{ sale.item.name }}</td>
+                        <td>{{ sale.quantity }}</td>
+                        <td>Ksh {{ sale.total_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">No OTC sales recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+    <h5 class="center-align" style="margin-top: 30px;">EXPENSES BREAKDOWN</h5>
+
+    <div class="row">
+        <div class="col s12">
+            <h6>Stock Purchases</h6>
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Quantity Added</th>
+                        <th>Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in stock_purchases %}
+                    <tr>
+                        <td>{{ p.date|date:"M d, Y" }}</td>
+                        <td>{{ p.item }}</td>
+                        <td>{{ p.quantity }}</td>
+                        <td>Ksh {{ p.cost|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">No stock purchases recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col s12 m6">
+            <h6>Payroll Payouts</h6>
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Employee</th>
+                        <th>Amount Paid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in salary_payouts %}
+                    <tr>
+                        <td>{{ s.month|date:"M Y" }}</td>
+                        <td>{{ s.employee }}</td>
+                        <td>Ksh {{ s.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3">No salaries paid.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col s12 m6">
+            <h6>Other Expenses</h6>
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td>{{ expense.date|date:"M d, Y" }}</td>
+                        <td>{{ expense.category }} - {{ expense.description|truncatechars:20 }}</td>
+                        <td>Ksh {{ expense.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3">No other expenses recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

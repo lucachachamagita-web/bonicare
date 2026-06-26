@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import case
+from .models import Visit, ServiceCatalog, ServiceRecord
 
-# Register your models here.
-admin.site.register(case)
+admin.site.register(Visit)
+admin.site.register(ServiceCatalog)
+admin.site.register(ServiceRecord)

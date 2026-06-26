@@ -1,0 +1,41 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Patients{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 20px;">
+        <div class="col s6">
+            <h4>Patient List</h4>
+        </div>
+        <div class="col s6 right-align">
+            {% if request.user.userprofile.role in 'PROPRIETOR,DOCTOR,ATTENDANT' %}
+            <a href="{% url 'patient_create' %}" class="btn blue-grey darken-2">Register Patient</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <table class="striped responsive-table">
+        <thead>
+            <tr>
+                <th>Patient ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Registered</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for patient in patients %}
+            <tr>
+                <td>{{ patient.patient_id }}</td>
+                <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+                <td>{{ patient.phone }}</td>
+                <td>{{ patient.registered_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No patients registered.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

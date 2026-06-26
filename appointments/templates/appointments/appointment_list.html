@@ -1,0 +1,43 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Appointments{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 20px;">
+        <div class="col s6">
+            <h4>Appointments List</h4>
+        </div>
+        <div class="col s6 right-align">
+            {% if request.user.userprofile.role in 'PROPRIETOR,DOCTOR,ATTENDANT' %}
+            <a href="{% url 'appointment_create' %}" class="btn blue-grey darken-2">Schedule Appointment</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <table class="striped responsive-table">
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Status</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appt in appointments %}
+            <tr>
+                <td>{{ appt.date_time|date:"M d, Y h:i A" }}</td>
+                <td>{{ appt.patient.first_name }} {{ appt.patient.last_name }}</td>
+                <td>Dr. {{ appt.doctor.last_name }}</td>
+                <td><span class="chip">{{ appt.status }}</span></td>
+                <td>{{ appt.notes }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No appointments scheduled.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Patient
+from .models import UserProfile, Patient, SalaryRecord
 
-# Register your models here.
+admin.site.register(UserProfile)
 admin.site.register(Patient)
+admin.site.register(SalaryRecord)

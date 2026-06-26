@@ -1,6 +1,6 @@
 $(document).ready(function(){
   $(".button-collapse").sideNav();
-  $('select').material_select();
+  $('select').not('.browser-default').material_select();
   $('.collapsible').collapsible();
 
   var today = new Date();

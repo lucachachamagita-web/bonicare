@@ -1,0 +1,61 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row hide-on-print" style="margin-top: 20px;">
+        <div class="col s12 right-align">
+            <button onclick="window.print()" class="btn blue"><i class="material-icons left">print</i>Print / Export PDF</button>
+        </div>
+    </div>
+    
+    <div class="report-header center-align" style="margin-bottom: 30px;">
+        <h4 style="font-weight: bold; margin-bottom: 5px;">BONICARE HEALTH CLINIC</h4>
+        <p class="grey-text" style="margin-top: 0; margin-bottom: 10px;">Contact: 0758269991</p>
+        <h5 style="margin-top: 10px;">Stock Flow Report</h5>
+        <p style="margin: 0;">Recent Inventory Movements</p>
+    </div>
+
+    <div class="row">
+        <div class="col s12">
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Item</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Handled By</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in movements %}
+                    <tr>
+                        <td>{{ movement.timestamp|date:"M d, Y H:i" }}</td>
+                        <td>{{ movement.item.name }}</td>
+                        <td>
+                            {% if movement.movement_type == 'IN' %}
+                            <span class="green-text font-weight-bold">IN</span>
+                            {% else %}
+                            <span class="red-text font-weight-bold">OUT</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ movement.quantity }}</td>
+                        <td>{{ movement.handled_by.username }}</td>
+                        <td>
+                            {% if movement.is_approved %}
+                            <span class="chip green white-text">Approved</span>
+                            {% else %}
+                            <span class="chip orange white-text">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="center-align">No stock movements recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

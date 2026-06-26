@@ -1,0 +1,48 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}New Stock Item{% endblock %}
+
+{% block content %}
+<div class="row">
+    <form class="col s12 m8 offset-m2" method="POST">
+        {% csrf_token %}
+        <div class="card" style="margin-top: 30px;">
+            <div class="card-content">
+                <span class="card-title">Add Medicine / Supply</span>
+                
+                <div class="row">
+                    <div class="input-field col s12 m6">
+                        <input id="name" name="name" type="text" required>
+                        <label for="name">Item Name</label>
+                    </div>
+                    <div class="col s12 m6" style="margin-top: 15px;">
+                        <label>Category</label>
+                        <select name="category" required class="browser-default">
+                            <option value="MEDICINE" selected>Medicine</option>
+                            <option value="EQUIPMENT">Equipment</option>
+                            <option value="CONSUMABLE">Consumable</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="input-field col s12 m6">
+                        <input id="unit_price" name="unit_price" type="number" step="0.01" min="0" required>
+                        <label for="unit_price">Selling Price (KES)</label>
+                    </div>
+                    <div class="input-field col s12 m6">
+                        <input id="reorder_level" name="reorder_level" type="number" value="10" min="0" required>
+                        <label for="reorder_level">Reorder Level (Alert threshold)</label>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="card-action right-align">
+                <a href="{% url 'stock_list' %}" class="btn-flat">Cancel</a>
+                <button type="submit" class="btn green darken-1">Save Item</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,36 +1,45 @@
-from django.contrib.auth.models import Group
-
-def hasGroup(user, groupName):
-    try:
-        group = Group.objects.get(name=groupName)
-        return True if group in user.groups.all() else False
-    except:
-        return False
-
-def menu_processor(request):
+def role_menu(request):
+    user_role = None
     menu = {}
-    user = request.user
-    if hasGroup(user, 'doctor'):
-        menu['Appointments'] = '/appointments'
-        menu['Cases'] = '/case'
-    elif hasGroup(user, 'patient'):
-        menu['Reports'] = '/reports'
-        menu['Appointments'] = '/appointments'
-        menu['Medication'] = '/bill/medicines'
-        menu['Bills'] = '/bill'
-        menu['Cases'] = '/case'
-    elif hasGroup(user, 'receptionist'):
-        menu['New Patient'] = '/profile/register'
-        menu['Manage Appointments'] = '/appointments'
-        menu['New Appointment'] = '/appointments/book'
-        menu['Bills'] = '/bill'
-        menu['Cases'] = '/case'
-        menu['Generate Case'] = '/case/generate'
-    elif hasGroup(user, 'lab_attendant'):
-        menu['Reports'] = '/reports'
-        menu['Generate Report'] = '/reports/generate'
-    elif hasGroup(user, 'inventory_manager'):
-        menu['All Stock'] = ''
-        menu['Stock Details'] = ''
-
-    return {'menu': menu}
+    
+    if request.user.is_authenticated:
+        if hasattr(request.user, 'userprofile'):
+            user_role = request.user.userprofile.role
+            
+            if user_role == 'PROPRIETOR':
+                menu = {
+                    'Dashboard': '/reports/dashboard/',
+                    'Staff & Salaries': '/profile/staff/',
+                    'Payroll': '/profile/salaries/',
+                    'Patients': '/profile/patients/',
+                    'Stock Inventory': '/stock/',
+                    'Stock Approvals': '/stock/approvals/',
+                    'Service Catalog': '/case/services/catalog/',
+                    'Bills': '/bill/',
+                    'Expenses': '/bill/expenses/'
+                }
+            elif user_role == 'DOCTOR':
+                menu = {
+                    'Dashboard': '/home/',
+                    'Appointments': '/appointments/',
+                    'Patients': '/profile/patients/',
+                    'Active Visits': '/case/',
+                    'Stock / Dispense': '/stock/'
+                }
+            elif user_role == 'ATTENDANT':
+                menu = {
+                    'Dashboard': '/home/',
+                    'Patients': '/profile/patients/',
+                    'Appointments': '/appointments/',
+                    'Visits & Check-in': '/case/',
+                    'Stock / Dispense': '/stock/',
+                    'Bills': '/bill/'
+                }
+        elif request.user.is_superuser:
+            user_role = 'SUPERUSER'
+            menu = {
+                'Dashboard': '/reports/dashboard/',
+                'Patients': '/profile/patients/'
+            }
+            
+    return {'menu': menu, 'user_role': user_role}

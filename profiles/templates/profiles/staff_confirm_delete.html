@@ -1,0 +1,24 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Delete Staff Member{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 50px;">
+    <div class="row">
+        <form class="col s12 m6 offset-m3" method="POST">
+            {% csrf_token %}
+            <div class="card red lighten-5">
+                <div class="card-content red-text text-darken-4">
+                    <span class="card-title">Are you absolutely sure?</span>
+                    <p>You are about to permanently delete the staff member <strong>{{ staff_profile.user.first_name }} {{ staff_profile.user.last_name }} ({{ staff_profile.user.username }})</strong> and all their associated system credentials.</p>
+                    <p>This action cannot be undone.</p>
+                </div>
+                <div class="card-action right-align">
+                    <a href="{% url 'staff_list' %}" class="btn-flat">Cancel</a>
+                    <button type="submit" class="btn red darken-2">Yes, Delete Staff</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

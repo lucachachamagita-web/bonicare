@@ -1,0 +1,53 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Active Visits{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 20px;">
+        <div class="col s6">
+            <h4>Active Patients in Clinic</h4>
+        </div>
+        <div class="col s6 right-align">
+            {% if request.user.userprofile.role in 'DOCTOR,ATTENDANT' %}
+            <a href="{% url 'visit_create' %}" class="btn blue-grey darken-2">Check-in Patient</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <table class="striped responsive-table">
+        <thead>
+            <tr>
+                <th>Check-in Time</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for visit in visits %}
+            <tr>
+                <td>{{ visit.check_in_time|date:"h:i A" }}</td>
+                <td>{{ visit.patient.first_name }} {{ visit.patient.last_name }}</td>
+                <td>Dr. {{ visit.doctor.last_name }}</td>
+                <td>
+                    {% if request.user.userprofile.role in 'DOCTOR,ATTENDANT' %}
+                        {% if request.user.userprofile.role == 'DOCTOR' or request.user.userprofile.role == 'ATTENDANT' %}
+                            <a href="{% url 'service_log_create' visit.id %}" class="btn-small blue" title="Log Service"><i class="material-icons">build</i></a>
+                        {% endif %}
+                        {% if request.user.userprofile.role == 'DOCTOR' %}
+                            <a href="{% url 'prescription_create' visit.id %}" class="btn-small green" title="Prescribe"><i class="material-icons">local_pharmacy</i></a>
+                        {% endif %}
+                        <a href="{% url 'visit_bill' visit.id %}" class="btn-small grey" title="View Bill"><i class="material-icons">receipt</i></a>
+                    {% else %}
+                    <span class="grey-text">Read Only</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No active visits.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Bills{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 20px;">
+        <div class="col s12">
+            <h4>Generated Bills</h4>
+        </div>
+    </div>
+    
+    <table class="striped responsive-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Patient</th>
+                <th>Total Amount</th>
+                <th>Paid</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bill in bills %}
+            <tr>
+                <td>{{ bill.generated_at|date:"M d, Y" }}</td>
+                <td>{{ bill.visit.patient.first_name }} {{ bill.visit.patient.last_name }}</td>
+                <td>Ksh {{ bill.total_amount }}</td>
+                <td>Ksh {{ bill.amount_paid }}</td>
+                <td>
+                    {% if bill.is_paid %}
+                    <span class="chip green white-text">PAID</span>
+                    {% else %}
+                    <span class="chip red white-text">UNPAID</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not bill.is_paid %}
+                        {% if request.user.userprofile.role != 'PROPRIETOR' %}
+                            <a href="{% url 'bill_pay' bill.id %}" class="btn-small green">Collect Payment</a>
+                        {% else %}
+                            <span class="chip orange white-text">Awaiting Payment</span>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'bill_receipt' bill.id %}" class="btn-small grey"><i class="material-icons">print</i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6">No bills generated.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

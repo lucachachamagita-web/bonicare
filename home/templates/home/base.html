@@ -2,7 +2,7 @@
 
 <html>
 	<head>
-		<title>{% block title %}Home{% endblock %} | myHospital</title>
+		<title>{% block title %}Home{% endblock %} | BONICARE HEALTH CLINIC</title>
 		<!--<link rel="icon" href="imageset/favicon.png">-->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,27 @@
 		<script src="{% static "js/jquery-3.2.1.min.js" %}"></script>
 		<script src="{% static "js/materialize.min.js" %}"></script>
 
-		<script src="{% static "js/script.js" %}"></script>
+		<script src="{% static "js/script.js" %}?v=3"></script>
+		<style>
+			@media print {
+				.hide-on-print, nav, footer, #slide-out, .button-collapse {
+					display: none !important;
+				}
+				body, main, #body {
+					padding-left: 0 !important;
+					margin: 0 !important;
+					width: 100% !important;
+				}
+				.container {
+					width: 100% !important;
+					max-width: 100% !important;
+				}
+				.card, .card-panel {
+					box-shadow: none !important;
+					border: 1px solid #ccc !important;
+				}
+			}
+		</style>
 	</head>
 
 	<body>
@@ -38,12 +58,10 @@
 		    	</div>
 			</li>
 
-			<li><a class="waves-effect waves-grey" href="/profile">Profile</a></li>
 			{% for item,url in menu.items %}
 				<li><a class="waves-effect waves-grey" href="{{url}}">{{item}}</a></li>
 			{% endfor %}
 			<li><div class="divider"></div></li>
-			<li><a class="subheader">Actions</a></li>
 			<li><a class="waves-effect" href="/logout">Logout</a></li>
 		</ul>
 
@@ -51,28 +69,29 @@
 					<nav>
 			    	<div class="nav-wrapper blue-grey darken-3">
 							<a href="#" data-activates="slide-out" class="button-collapse"><i class="material-icons">menu</i></a>
-							<a href="#" class="brand-logo center">{% block heading %}Hospital Portal{% endblock %}</a>
+							<a href="#" class="brand-logo center">{% block heading %}BONICARE HEALTH CLINIC{% endblock %}</a>
 						</div>
 					</nav>
 					<div id="body">
-						{% block body %}{% endblock %}
+						{% block content %}{% endblock %}
 					</div>
 		</main>
 
 
 		<footer class="page-footer blue-grey darken-2">
 			<div class="container">
-        <div class="row">
-          <div class="col l12 s12 grey-text text-lighten-4">
-            <div class="center">Developed By</div>
-						<div class="center">sirmtech| dirfimcoder| dafirmtech</div>
-						<div class="center">
-							<a class="grey-text text-lighten-4" href="https://github.com/anmolsaxena10/myHospital" target="_blank"><i class="fab fa-github fa-2x" aria-hidden="true"></i></a>
-						</div>
-          </div>
-        </div>
-      </div>
-  	</footer>
+				<div class="row" style="margin-bottom: 0;">
+					<div class="col s12 m6 grey-text text-lighten-4 left-align">
+						<h5 style="margin-top: 0;">BONICARE HEALTH CLINIC</h5>
+						<p style="margin: 0;">Contact: 0758269991</p>
+					</div>
+					<div class="col s12 m6 grey-text text-lighten-4 right-align">
+						<div>Developed By</div>
+						<div>sirmtech | dirfimcoder | dafirmtech</div>
+					</div>
+				</div>
+			</div>
+		</footer>
 
 
 	</body>

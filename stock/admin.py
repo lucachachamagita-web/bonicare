@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import items,stock
+from .models import Supplier, StockItem, PurchaseOrder, StockMovement
 
-# Register your models here.
-admin.site.register(items)
-admin.site.register(stock)
+admin.site.register(Supplier)
+admin.site.register(StockItem)
+admin.site.register(PurchaseOrder)
+admin.site.register(StockMovement)

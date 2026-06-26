@@ -1,0 +1,59 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Salary Records{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 20px;">
+        <div class="col s6">
+            <h4>Staff Salaries</h4>
+        </div>
+        <div class="col s6 right-align">
+            <form action="{% url 'generate_payroll' %}" method="POST" style="display:inline-block; margin-right: 15px;">
+                {% csrf_token %}
+                <div class="input-field inline" style="margin-bottom: 0;">
+                    <input type="month" name="payroll_month" required style="height: 36px; margin-bottom: 0;">
+                </div>
+                <button type="submit" class="btn green darken-1">Generate Payroll</button>
+            </form>
+            <a href="{% url 'salary_create' %}" class="btn blue-grey darken-2">Log New Salary</a>
+        </div>
+    </div>
+    
+    <table class="striped responsive-table">
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Employee</th>
+                <th>Base Salary</th>
+                <th>Bonus</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in salaries %}
+            <tr>
+                <td>{{ s.month|date:"F Y" }}</td>
+                <td>{{ s.employee.first_name }} {{ s.employee.last_name }}</td>
+                <td>Ksh {{ s.base_salary }}</td>
+                <td>Ksh {{ s.bonus }}</td>
+                <td>
+                    {% if s.is_paid %}
+                    <span class="chip green white-text">PAID</span>
+                    {% else %}
+                    <span class="chip red white-text">UNPAID</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'salary_edit' s.id %}" class="btn-small blue-grey darken-1">Edit</a>
+                    <a href="{% url 'salary_delete' s.id %}" class="btn-small red darken-2">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6">No salary records found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

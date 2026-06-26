@@ -1,0 +1,47 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row hide-on-print" style="margin-top: 20px;">
+        <div class="col s12 right-align">
+            <button onclick="window.print()" class="btn blue"><i class="material-icons left">print</i>Print / Export PDF</button>
+        </div>
+    </div>
+    
+    <div class="report-header center-align" style="margin-bottom: 30px;">
+        <h4 style="font-weight: bold; margin-bottom: 5px;">BONICARE HEALTH CLINIC</h4>
+        <p class="grey-text" style="margin-top: 0; margin-bottom: 10px;">Contact: 0758269991</p>
+        <h5 style="margin-top: 10px;">Orders to be Made (Low Stock)</h5>
+        <p style="margin: 0;">Items at or below reorder level</p>
+    </div>
+
+    <div class="row">
+        <div class="col s12">
+            <table class="striped bordered">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Current Quantity</th>
+                        <th>Reorder Level</th>
+                        <th>Deficit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_list %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.category }}</td>
+                        <td class="red-text font-weight-bold">{{ item.current_quantity }}</td>
+                        <td>{{ item.reorder_level }}</td>
+                        <td>{{ item.reorder_level|add:"-"|add:item.current_quantity }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="center-align">No items need to be ordered currently.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Stock Approvals{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 20px;">
+        <div class="col s12">
+            <h4>Pending Purchase Orders</h4>
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Supplier</th>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for po in pending_pos %}
+                    <tr>
+                        <td>{{ po.ordered_date|date:"M d, Y" }}</td>
+                        <td>{{ po.supplier.name }}</td>
+                        <td>{{ po.item.name }}</td>
+                        <td>{{ po.quantity }}</td>
+                        <td>
+                            <form method="POST" style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve_po">
+                                <input type="hidden" name="obj_id" value="{{ po.id }}">
+                                <button type="submit" class="btn-small green darken-1">Approve</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">No pending purchase orders.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="row" style="margin-top: 40px;">
+        <div class="col s12">
+            <h4>Pending Stock IN (Verify Delivery)</h4>
+            <table class="striped responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>PO / Delivery Note</th>
+                        <th>Logged By</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in unverified_ins %}
+                    <tr>
+                        <td>{{ mov.timestamp|date:"M d, Y H:i" }}</td>
+                        <td>{{ mov.item.name }}</td>
+                        <td>{{ mov.quantity }}</td>
+                        <td>{% if mov.purchase_order %}PO #{{ mov.purchase_order.id }} - DN: {{ mov.purchase_order.delivery_note_number }}{% else %}N/A{% endif %}</td>
+                        <td>{{ mov.handled_by.username }}</td>
+                        <td>
+                            <form method="POST" style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="verify_in">
+                                <input type="hidden" name="obj_id" value="{{ mov.id }}">
+                                <button type="submit" class="btn-small blue-grey darken-2">Verify</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6">No unverified stock IN movements.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

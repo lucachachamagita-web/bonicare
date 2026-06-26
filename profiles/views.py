@@ -1,63 +1,168 @@
-from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User,Group
-from .models import Patient
-from django.template.context_processors import csrf
-from home.context_processors import hasGroup
-from django.contrib import messages
-
-# Create your views here.
-@login_required
-def myProfile(request):
-    c={}
-    if hasGroup(request.user, 'patient'):
-        c['isPatient'] = True
-    return render(request, 'profiles/my_profile.html', c)
+from django.contrib.auth.models import User
+from .models import Patient, UserProfile, SalaryRecord
+from profiles.permissions import role_required
 
 @login_required
-def register(request):
-    if hasGroup(request.user, 'receptionist'):
-        c = {}
-        c.update(csrf(request))
-        return render(request, 'profiles/register.html')
-    else:
-        messages.add_message(request, messages.WARNING, 'Access Denied.')
-        return HttpResponseRedirect('/home')
+@role_required(['PROPRIETOR', 'DOCTOR', 'ATTENDANT'])
+def patient_list(request):
+    patients = Patient.objects.all().order_by('-registered_at')
+    return render(request, 'profiles/patient_list.html', {'patients': patients})
 
 @login_required
-def doRegister(request):
-    if hasGroup(request.user, 'receptionist'):
-        username = request.POST.get('username')
-        if User.objects.filter(username=username).exists():
-            messages.add_message(request, messages.ERROR, 'Username Already Exists.')
-            return HttpResponseRedirect('/profile/register')
-        password = request.POST.get('password1')
-        cpassword = request.POST.get('password2')
-        if not password == cpassword:
-            messages.add_message(request, messages.ERROR, 'Passwords not matching.')
-            return HttpResponseRedirect('/profile/register')
+@role_required(['PROPRIETOR', 'DOCTOR', 'ATTENDANT'])
+def patient_create(request):
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient_id')
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
-        contact_no = request.POST.get('contact_no')
-        if not contact_no.isdigit():
-            messages.add_message(request, messages.ERROR, 'Wrong Contact no.')
-            return HttpResponseRedirect('/profile/register')
-        address = request.POST.get('address')
         dob = request.POST.get('dob')
-        blood_group = request.POST.get('blood_group')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+        
+        Patient.objects.create(
+            patient_id=patient_id,
+            first_name=first_name,
+            last_name=last_name,
+            dob=dob,
+            phone=phone,
+            address=address,
+            registered_by=request.user
+        )
+        return redirect('patient_list')
+        
+    return render(request, 'profiles/patient_form.html')
+
+@login_required
+@role_required(['PROPRIETOR'])
+def staff_list(request):
+    staff = UserProfile.objects.all().select_related('user')
+    return render(request, 'profiles/staff_list.html', {'staff': staff})
+
+@login_required
+@role_required(['PROPRIETOR'])
+def staff_create(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
         email = request.POST.get('email')
-        patient = User.objects.create_user(username=username, password=password, first_name=first_name, last_name=last_name, email=email)
-        patient.patient = Patient(contact_no=int(contact_no), address=address, dob=dob, blood_group=blood_group)
-        patient.patient.save()
-        patient.save()
+        password = request.POST.get('password')
+        role = request.POST.get('role')
+        phone = request.POST.get('phone')
+        basic_salary = request.POST.get('basic_salary', '0.00')
+        
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        UserProfile.objects.create(
+            user=user,
+            role=role,
+            phone=phone,
+            basic_salary=basic_salary
+        )
+        return redirect('staff_list')
+    return render(request, 'profiles/staff_form.html')
 
-        group = Group.objects.get(name='patient')
-        group.user_set.add(patient)
-        group.save()
+@login_required
+@role_required(['PROPRIETOR'])
+def staff_edit(request, staff_id):
+    staff_profile = get_object_or_404(UserProfile, id=staff_id)
+    if request.method == 'POST':
+        staff_profile.user.first_name = request.POST.get('first_name')
+        staff_profile.user.last_name = request.POST.get('last_name')
+        staff_profile.user.email = request.POST.get('email')
+        staff_profile.user.save()
+        
+        staff_profile.role = request.POST.get('role')
+        staff_profile.phone = request.POST.get('phone')
+        staff_profile.basic_salary = request.POST.get('basic_salary', '0.00')
+        staff_profile.save()
+        
+        return redirect('staff_list')
+    return render(request, 'profiles/staff_edit.html', {'staff_profile': staff_profile})
 
-        messages.add_message(request, messages.WARNING, 'Successfully Registered '+username)
-        return HttpResponseRedirect('/case/generate')
-    else:
-        messages.add_message(request, messages.WARNING, 'Access Denied.')
-        return HttpResponseRedirect('/home')
+@login_required
+@role_required(['PROPRIETOR'])
+def staff_delete(request, staff_id):
+    staff_profile = get_object_or_404(UserProfile, id=staff_id)
+    if request.method == 'POST':
+        staff_profile.user.delete()  # This will cascade and delete UserProfile
+        return redirect('staff_list')
+    return render(request, 'profiles/staff_confirm_delete.html', {'staff_profile': staff_profile})
+
+@login_required
+@role_required(['PROPRIETOR'])
+def salary_list(request):
+    salaries = SalaryRecord.objects.all().order_by('-month')
+    return render(request, 'profiles/salary_list.html', {'salaries': salaries})
+
+@login_required
+@role_required(['PROPRIETOR'])
+def salary_create(request):
+    if request.method == 'POST':
+        employee_id = request.POST.get('employee_id')
+        month = request.POST.get('month')
+        base_salary = request.POST.get('base_salary')
+        bonus = request.POST.get('bonus', '0')
+        is_paid = request.POST.get('is_paid') == 'on'
+        
+        employee = User.objects.get(id=employee_id)
+        
+        SalaryRecord.objects.create(
+            employee=employee,
+            month=month + '-01',  # Store as first day of the selected month
+            base_salary=base_salary,
+            bonus=bonus,
+            is_paid=is_paid
+        )
+        return redirect('salary_list')
+        
+    staff = UserProfile.objects.all()
+    return render(request, 'profiles/salary_form.html', {'staff': staff})
+
+@login_required
+@role_required(['PROPRIETOR'])
+def generate_payroll(request):
+    if request.method == 'POST':
+        month_input = request.POST.get('payroll_month')
+        if month_input:
+            month_date = month_input + '-01'
+            staff = UserProfile.objects.all()
+            for s in staff:
+                SalaryRecord.objects.get_or_create(
+                    employee=s.user,
+                    month=month_date,
+                    defaults={
+                        'base_salary': s.basic_salary,
+                        'bonus': 0.00,
+                        'is_paid': False
+                    }
+                )
+    return redirect('salary_list')
+
+@login_required
+@role_required(['PROPRIETOR'])
+def salary_edit(request, salary_id):
+    salary = get_object_or_404(SalaryRecord, id=salary_id)
+    if request.method == 'POST':
+        salary.base_salary = request.POST.get('base_salary')
+        salary.bonus = request.POST.get('bonus', '0')
+        salary.is_paid = request.POST.get('is_paid') == 'on'
+        salary.save()
+        return redirect('salary_list')
+    return render(request, 'profiles/salary_edit.html', {'salary': salary})
+
+@login_required
+@role_required(['PROPRIETOR'])
+def salary_delete(request, salary_id):
+    salary = get_object_or_404(SalaryRecord, id=salary_id)
+    if request.method == 'POST':
+        salary.delete()
+        return redirect('salary_list')
+    return render(request, 'profiles/salary_confirm_delete.html', {'salary': salary})

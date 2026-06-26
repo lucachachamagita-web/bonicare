@@ -1,14 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
-from case.models import case
+from profiles.models import Patient
 
-# Create your models here.
 class Appointment(models.Model):
-	patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointment_patient')
-	receptionist = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointment_receptionist')
-	doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointment_doctor')
-	case = models.ForeignKey(case, on_delete=models.CASCADE, related_name='appointment_case')
-	appointment_time = models.DateTimeField()
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointments')
+    date_time = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=[('SCHEDULED', 'Scheduled'), ('COMPLETED', 'Completed'), ('CANCELLED', 'Cancelled')])
+    notes = models.TextField(blank=True)
 
-	def __str__(self):
-		return self.patient.username + ' with ' + self.doctor.username
+    def __str__(self):
+        return f"Appt for {self.patient} with {self.doctor} at {self.date_time}"

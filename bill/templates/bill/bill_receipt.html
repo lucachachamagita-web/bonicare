@@ -1,0 +1,110 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Receipt{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 30px;">
+    <div class="row">
+        <div class="col s12 m10 offset-m1">
+            <div class="card" id="receipt-card">
+                <div class="card-content">
+                    <div class="center-align">
+                        <i class="material-icons large blue-grey-text">local_hospital</i>
+                        <h4>BONICARE HEALTH CLINIC</h4>
+                        <p class="grey-text" style="margin: 0;">Patient Payment Receipt</p>
+                        <p class="grey-text small" style="margin: 5px 0 15px 0;">Contact: 0758269991</p>
+                        <p class="small">Receipt #: INV-{{ bill.id }}</p>
+                        <p class="small">Date: {{ bill.generated_at|date:"M d, Y h:i A" }}</p>
+                    </div>
+                    
+                    <div class="row" style="margin-top: 20px;">
+                        <div class="col s6">
+                            <strong>Patient:</strong> {{ bill.visit.patient.get_full_name }}<br>
+                            <strong>Patient ID:</strong> {{ bill.visit.patient.id }}
+                        </div>
+                        <div class="col s6 right-align">
+                            <strong>Doctor:</strong> Dr. {{ bill.visit.doctor.last_name }}<br>
+                            <strong>Cashier:</strong> {{ bill.generated_by.get_full_name }}
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
+                    
+                    <table class="striped">
+                        <thead>
+                            <tr>
+                                <th>Item / Service</th>
+                                <th>Type</th>
+                                <th>Qty</th>
+                                <th class="right-align">Amount (KES)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Services -->
+                            {% for record in bill.visit.services.all %}
+                            <tr>
+                                <td>{{ record.service.name }}</td>
+                                <td>Service</td>
+                                <td>{{ record.quantity }}</td>
+                                <td class="right-align">{% widthratio record.applied_price 1 record.quantity %}</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Prescriptions -->
+                            {% for rx in bill.visit.prescriptions.all %}
+                            <tr>
+                                <td>{{ rx.item.name }}</td>
+                                <td>Pharmacy</td>
+                                <td>{{ rx.quantity }}</td>
+                                <td class="right-align">{% widthratio rx.item.unit_price 1 rx.quantity %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;">
+                    
+                    <div class="row">
+                        <div class="col s6 offset-s6 right-align">
+                            <p><strong>Subtotal:</strong> {{ bill.total_amount }}</p>
+                            <p class="red-text"><strong>Discount:</strong> -{{ bill.discount }}</p>
+                            <h5>Total Paid: {{ bill.amount_paid }} KES</h5>
+                        </div>
+                    </div>
+                    
+                    <div class="center-align" style="margin-top: 30px;">
+                        <p class="small grey-text">Thank you for visiting BONICARE HEALTH CLINIC. Get well soon!</p>
+                        <p class="small grey-text">For inquiries, contact us at 0758269991.</p>
+                    </div>
+                </div>
+                
+                <div class="card-action center-align hide-on-print">
+                    <button onclick="window.print()" class="btn blue darken-2"><i class="material-icons left">print</i> Print Receipt</button>
+                    <a href="{% url 'bill_list' %}" class="btn-flat">Back to Bills</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #receipt-card, #receipt-card * {
+            visibility: visible;
+        }
+        #receipt-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            box-shadow: none !important;
+        }
+        .hide-on-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

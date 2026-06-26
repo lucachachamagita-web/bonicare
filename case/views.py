@@ -1,96 +1,115 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.template.context_processors import csrf
-from django.http import HttpResponseRedirect
-from django.contrib.auth.models import User, Group
-from .models import case
-from datetime import datetime
-from home.context_processors import hasGroup
-from appointments.models import Appointment
-from django.contrib import messages
-from stock.models import items
-from bill.models import bill
-# Create your views here.
-
-#CREATE
-@login_required
-def generate(request):
-    if hasGroup(request.user, 'receptionist'):
-        c = {}
-        c.update(csrf(request))
-        c['patients'] = User.objects.filter(groups__name='patient')
-        return render(request, 'case/generate.html', c)
-    messages.add_message(request, messages.WARNING, 'Access Denied.')
-    return HttpResponseRedirect('/home')
+from .models import Visit, ServiceCatalog, ServiceRecord, Prescription
+from stock.models import StockItem
+from profiles.models import Patient
+from django.contrib.auth.models import User
+from profiles.permissions import role_required
+from bill.models import Bill
 
 @login_required
-def doGenerate(request):
-    if hasGroup(request.user, 'receptionist'):
-        patient = User.objects.get(username=request.POST.get('patient', ''))
-        description = request.POST.get('description', '')
-        filed_date = datetime.now()
-        c = case(patient=patient, receptionist=request.user, description=description, filed_date=filed_date)
-        c.save()
+@role_required(['PROPRIETOR', 'DOCTOR', 'ATTENDANT'])
+def visit_list(request):
+    visits = Visit.objects.filter(is_closed=False).order_by('-check_in_time')
+    return render(request, 'case/visit_list.html', {'visits': visits})
 
-        item = items.objects.get(item_name='Consulting Charges')
-        quantity = 1
-        bill_date = datetime.now()
-        bill_details = 'Basic Consulting Charges'
-        ammount = item.sell_price*quantity
-        b = bill(case=c, item=item, quantity=quantity, bill_date=bill_date, bill_details=bill_details, ammount=ammount)
-        b.save()
-
-        messages.add_message(request, messages.INFO, 'Successfully Generated Case')
-        return HttpResponseRedirect('/appointments/book')
-    messages.add_message(request, messages.WARNING, 'Access Denied.')
-    return HttpResponseRedirect('/home')
-
-#RETRIEVE
 @login_required
-def view(request):
-    c = {}
-    user = request.user
-    cases = None
-    if hasGroup(user, 'receptionist'):
-        cases = case.objects.all()
-    elif hasGroup(user, 'patient'):
-        cases = case.objects.filter(patient=user)
-    elif hasGroup(user, 'doctor'):
-        c['isDoctor'] = True
-        cases = [appointment.case for appointment in Appointment.objects.filter(doctor=user)]
+@role_required(['DOCTOR', 'ATTENDANT'])
+def visit_create(request):
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient_id')
+        doctor_id = request.POST.get('doctor_id')
+        
+        if not patient_id or not doctor_id:
+            patients = Patient.objects.all()
+            doctors = User.objects.filter(userprofile__role='DOCTOR')
+            return render(request, 'case/visit_form.html', {
+                'patients': patients, 
+                'doctors': doctors,
+                'error': 'Please select both a Patient and a Doctor.'
+            })
+            
+        patient = Patient.objects.get(id=patient_id)
+        doctor = User.objects.get(id=doctor_id)
+        
+        Visit.objects.create(
+            patient=patient,
+            doctor=doctor
+        )
+        return redirect('visit_list')
+        
+    patients = Patient.objects.all()
+    doctors = User.objects.filter(userprofile__role='DOCTOR')
+    return render(request, 'case/visit_form.html', {'patients': patients, 'doctors': doctors})
 
-    open=[]
-    closed=[]
-    for ca in cases:
-        if ca.closed_date:
-            closed.append(ca)
-        else:
-            open.append(ca)
-    c['openCases'] = open
-    c['closedCases'] = closed
-    return render(request, 'case/view.html', c)
-
-#UPDATE
 @login_required
-def close(request, id):
-    user = request.user
-    if hasGroup(user, 'doctor'):
-        c = case.objects.get(id=id)
-        c.closed_date = datetime.now()
-        c.save()
-        messages.add_message(request, messages.INFO, 'Successfully Closed Case')
-        return HttpResponseRedirect('/case')
-    messages.add_message(request, messages.WARNING, 'Access Denied.')
-    return HttpResponseRedirect('/home')
+@role_required(['DOCTOR', 'ATTENDANT'])
+def service_log_create(request, visit_id):
+    visit = get_object_or_404(Visit, id=visit_id)
+    if request.method == 'POST':
+        service_id = request.POST.get('service_id')
+        quantity = int(request.POST.get('quantity', 1))
+        
+        service = ServiceCatalog.objects.get(id=service_id)
+        
+        ServiceRecord.objects.create(
+            visit=visit,
+            service=service,
+            performed_by=request.user,
+            quantity=quantity,
+            applied_price=service.base_price
+        )
+        return redirect('visit_list')
+        
+    services = ServiceCatalog.objects.filter(is_active=True)
+    return render(request, 'case/service_form.html', {'visit': visit, 'services': services})
 
-
-#DELETE
 @login_required
-def delete(request, id):
-    user = request.user
-    if hasGroup(user, 'receptionist'):
-        case.objects.get(id=id).delete()
-        messages.add_message(request, messages.INFO, 'Successfully Closed Case')
-        return HttpResponseRedirect('/case')
-    messages.add_message(request, messages.WARNING, 'Access Denied.')
-    return HttpResponseRedirect('/home')
+@role_required(['DOCTOR'])
+def prescription_create(request, visit_id):
+    visit = get_object_or_404(Visit, id=visit_id)
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        quantity = int(request.POST.get('quantity', 1))
+        
+        item = StockItem.objects.get(id=item_id)
+        
+        Prescription.objects.create(
+            visit=visit,
+            item=item,
+            prescribed_by=request.user,
+            quantity=quantity
+        )
+        return redirect('visit_list')
+        
+    items = StockItem.objects.filter(category='MEDICINE', current_quantity__gt=0)
+    return render(request, 'case/prescription_form.html', {'visit': visit, 'items': items})
+
+@login_required
+@role_required(['DOCTOR', 'ATTENDANT'])
+def visit_bill(request, visit_id):
+    visit = get_object_or_404(Visit, id=visit_id)
+    bill = getattr(visit, 'bill', None)
+    return render(request, 'case/visit_bill.html', {'visit': visit, 'bill': bill})
+
+@login_required
+@role_required(['PROPRIETOR'])
+def service_catalog_list(request):
+    services = ServiceCatalog.objects.all().order_by('name')
+    return render(request, 'case/service_catalog_list.html', {'services': services})
+
+@login_required
+@role_required(['PROPRIETOR'])
+def service_catalog_create(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        base_price = request.POST.get('base_price', '0.00')
+        
+        ServiceCatalog.objects.create(
+            name=name,
+            base_price=base_price,
+            is_active=True
+        )
+        return redirect('service_catalog_list')
+        
+    return render(request, 'case/service_catalog_form.html')

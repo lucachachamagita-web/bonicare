@@ -1,0 +1,47 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Stock Inventory{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-top: 20px;">
+        <div class="col s6">
+            <h4>Current Inventory</h4>
+        </div>
+        <div class="col s6 right-align">
+            {% if request.user.userprofile.role in 'PROPRIETOR,DOCTOR' %}
+            <a href="{% url 'stock_item_create' %}" class="btn green darken-1">New Item</a>
+            {% endif %}
+            <a href="{% url 'otc_sale_create' %}" class="btn orange darken-2">OTC Sale</a>
+            <a href="{% url 'stock_movement' %}" class="btn blue-grey darken-2">Log Movement</a>
+        </div>
+    </div>
+    
+    <table class="striped responsive-table">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Unit Price</th>
+                <th>Current Qty</th>
+                <th>Reorder Level</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.category }}</td>
+                <td>Ksh {{ item.unit_price }}</td>
+                <td class="{% if item.current_quantity <= item.reorder_level %}red-text bold{% endif %}">
+                    {{ item.current_quantity }}
+                </td>
+                <td>{{ item.reorder_level }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No stock items configured.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

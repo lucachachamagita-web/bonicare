@@ -1,0 +1,142 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Patient Bill Snapshot{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 30px;">
+    <div class="card">
+        <div class="card-content">
+            <span class="card-title">Bill for {{ visit.patient.first_name }} {{ visit.patient.last_name }}</span>
+            <p><strong>Check-in:</strong> {{ visit.check_in_time|date:"M d, Y H:i" }}</p>
+            <p><strong>Doctor:</strong> Dr. {{ visit.doctor.last_name }}</p>
+            
+            <hr style="margin: 20px 0;">
+            
+            {% if bill %}
+                <h5>Total Billed: KES {{ bill.total_amount }}</h5>
+                <p><strong>Amount Paid:</strong> KES {{ bill.amount_paid }}</p>
+                <p><strong>Status:</strong> {% if bill.is_paid %}<span class="green-text font-weight-bold">PAID / DISCHARGED</span>{% else %}<span class="red-text font-weight-bold">PENDING</span>{% endif %}</p>
+            {% else %}
+                <h5>No charges recorded yet.</h5>
+            {% endif %}
+            
+        </div>
+        <div class="card-action left-align hide-on-print">
+            <div class="row" style="margin-bottom: 0;">
+                <div class="col s12 m8">
+                    {% if bill and not bill.is_paid %}
+                        <a href="#mpesa-modal" class="btn green darken-2 modal-trigger" style="margin-right: 10px;"><i class="material-icons left">phone_android</i>Pay via M-Pesa</a>
+                        <a href="{% url 'bill_discharge' bill.id %}" class="btn red darken-2" style="margin-right: 10px;" onclick="return confirm('Are you sure you want to discharge the patient and mark the bill as fully paid?');"><i class="material-icons left">check_circle</i>Discharge</a>
+                    {% endif %}
+                    {% if bill %}
+                        <button onclick="window.print()" class="btn blue-grey"><i class="material-icons left">print</i>Print Bill</button>
+                    {% endif %}
+                </div>
+                <div class="col s12 m4 right-align">
+                    <a href="{% url 'visit_list' %}" class="btn-flat">Back to Visits</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if bill and not bill.is_paid %}
+<!-- M-Pesa Modal -->
+<div id="mpesa-modal" class="modal hide-on-print" style="max-width: 500px; border-radius: 8px;">
+    <div class="modal-content left-align">
+        <h4 style="font-weight: bold; color: #2e7d32;"><i class="material-icons left medium">payment</i>M-Pesa STK Push</h4>
+        <div id="mpesa-step-input">
+            <p>Enter the phone number and amount to send the M-Pesa STK Push request.</p>
+            <div class="row" style="margin-top: 20px;">
+                <div class="input-field col s12">
+                    <i class="material-icons prefix">phone_android</i>
+                    <input type="text" id="mpesa-phone" name="phone" value="{{ visit.patient.phone|default:'0758269991' }}">
+                    <label for="mpesa-phone" class="active">M-Pesa Phone Number</label>
+                </div>
+                <div class="input-field col s12">
+                    <i class="material-icons prefix">attach_money</i>
+                    <input type="number" id="mpesa-amount" name="amount" step="0.01" value="{{ bill.total_amount }}">
+                    <label for="mpesa-amount" class="active">Amount (KES)</label>
+                </div>
+            </div>
+            <div class="right-align">
+                <button type="button" class="btn-flat modal-close">Cancel</button>
+                <button type="button" onclick="triggerMpesaPush()" class="btn green darken-2">Send STK Push</button>
+            </div>
+        </div>
+        
+        <div id="mpesa-step-loading" style="display: none;" class="center-align">
+            <h5 style="margin-bottom: 20px;">Sending M-Pesa STK Push...</h5>
+            <div class="preloader-wrapper big active">
+                <div class="spinner-layer spinner-green-only">
+                    <div class="circle-clipper left"><div class="circle"></div></div>
+                    <div class="gap-patch"><div class="circle"></div></div>
+                    <div class="circle-clipper right"><div class="circle"></div></div>
+                </div>
+            </div>
+            <p class="grey-text" style="margin-top: 20px;">Please check the phone for the M-Pesa PIN prompt dialog.</p>
+        </div>
+        
+        <div id="mpesa-step-auth" style="display: none;" class="center-align">
+            <i class="material-icons large green-text">phone_locked</i>
+            <h5>STK Push Prompt Sent</h5>
+            <p>The push request was sent. Once you have entered the M-Pesa PIN on your phone, click 'Authenticate Payment' to complete the transaction.</p>
+            
+            <form id="mpesa-form" action="{% url 'bill_mpesa_pay' bill.id %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="phone" id="hidden-phone">
+                <input type="hidden" name="amount" id="hidden-amount">
+                
+                <div style="margin-top: 30px;">
+                    <button type="button" onclick="resetMpesaModal()" class="btn-flat">Back</button>
+                    <button type="submit" class="btn green darken-3">Authenticate Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    $(document).ready(function(){
+        $('.modal').modal();
+        
+        // Calculate remaining balance and set it
+        let total = parseFloat("{{ bill.total_amount }}") || 0;
+        let paid = parseFloat("{{ bill.amount_paid }}") || 0;
+        let discount = parseFloat("{{ bill.discount }}") || 0;
+        let remaining = Math.max(0, total - paid - discount);
+        $('#mpesa-amount').val(remaining.toFixed(2));
+    });
+
+    function triggerMpesaPush() {
+        let phone = $('#mpesa-phone').val();
+        let amount = $('#mpesa-amount').val();
+        
+        if (!phone || !amount) {
+            Materialize.toast('Please enter a valid phone number and amount.', 3000);
+            return;
+        }
+        
+        // Show loading step
+        $('#mpesa-step-input').hide();
+        $('#mpesa-step-loading').show();
+        
+        // Simulate STK push duration
+        setTimeout(function() {
+            $('#mpesa-step-loading').hide();
+            $('#mpesa-step-auth').show();
+            
+            // Set values in hidden form fields
+            $('#hidden-phone').val(phone);
+            $('#hidden-amount').val(amount);
+        }, 2000);
+    }
+
+    function resetMpesaModal() {
+        $('#mpesa-step-auth').hide();
+        $('#mpesa-step-loading').hide();
+        $('#mpesa-step-input').show();
+    }
+</script>
+{% endblock %}

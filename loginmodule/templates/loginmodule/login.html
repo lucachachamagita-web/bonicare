@@ -2,7 +2,7 @@
 
 <html>
 	<head>
-		<title>{% block title %} {% endblock %}</title>
+		<title>Login | BONICARE HEALTH CLINIC</title>
 		<!--<link rel="icon" href="imageset/favicon.png">-->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +16,7 @@
 		<script src="{% static "js/script.js" %}"></script>
 	</head>
 
-	<body>
+	<body style="background-color: #eceff1;">
 		{% if messages %}
 			{% for message in messages %}
 					<script>
@@ -24,27 +24,34 @@
 					</script>
 			{% endfor %}
 		{% endif %}
-    <div class="container center-align">
-      <h1>Login</h1>
-			<div class="row">
-				<form action="/loginmodule/auth" method="POST" class="col s12">{% csrf_token %}
-					<div class="row">
-						<div class="input-field col s12">
-							<i class="material-icons prefix">account_circle</i>
-		        	<input type="text" name="username" id="username" class="validate">
-							<label for="username">Username</label>
-						</div>
-						<div class="input-field col s12">
-							<i class="material-icons prefix">vpn_key</i>
-							<input type="password" name="password" class="validate" id="password">
-							<label for="password">Password</label>
-						</div>
-						<div class="input-field col s12">
-		        	<button type="submit" class="btn">Login</button>
-						</div>
-					</div>
-      	</form>
-			</div>
+    <div class="container center-align" style="margin-top: 80px; max-width: 450px;">
+      <i class="material-icons large blue-grey-text">local_hospital</i>
+      <h4 style="font-weight: bold; margin-bottom: 0; color: #37474f;">BONICARE HEALTH CLINIC</h4>
+      <p class="grey-text" style="margin-top: 5px; margin-bottom: 30px;">System Portal Login</p>
+      
+      <div class="card" style="padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <div class="row" style="margin-bottom: 0;">
+          <form action="/loginmodule/auth" method="POST" class="col s12">{% csrf_token %}
+            <div class="row" style="margin-bottom: 0;">
+              <div class="input-field col s12">
+                <i class="material-icons prefix">account_circle</i>
+                <input type="text" name="username" id="username" class="validate">
+                <label for="username">Username</label>
+              </div>
+              <div class="input-field col s12">
+                <i class="material-icons prefix">vpn_key</i>
+                <input type="password" name="password" class="validate" id="password">
+                <label for="password">Password</label>
+              </div>
+              <div class="input-field col s12" style="margin-top: 20px;">
+                <button type="submit" class="btn btn-large blue-grey darken-3" style="width: 100%;">Login</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <p class="grey-text small" style="margin-top: 20px;">Contact: 0758269991</p>
     </div>
 
 </body>

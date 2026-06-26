@@ -1,0 +1,48 @@
+{% extends 'home/base.html' %}
+
+{% block heading %}Check-in Patient{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 30px;">
+    {% if error %}
+    <div class="card-panel red lighten-2 white-text">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <form class="col s12 m8 offset-m2" method="POST">
+            {% csrf_token %}
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">Start New Visit</span>
+                    <div class="row">
+                        <div class="col s12 m6" style="margin-top: 15px;">
+                            <label>Patient</label>
+                            <select name="patient_id" required class="browser-default">
+                                <option value="" disabled selected>Select Patient</option>
+                                {% for patient in patients %}
+                                <option value="{{ patient.id }}">{{ patient.first_name }} {{ patient.last_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col s12 m6" style="margin-top: 15px;">
+                            <label>Doctor</label>
+                            <select name="doctor_id" required class="browser-default">
+                                <option value="" disabled selected>Select Doctor</option>
+                                {% for doc in doctors %}
+                                <option value="{{ doc.id }}">Dr. {{ doc.last_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-action right-align">
+                    <a href="{% url 'visit_list' %}" class="btn-flat">Cancel</a>
+                    <button type="submit" class="btn blue-grey darken-3">Check In</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
